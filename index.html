@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Sandspiel</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a1a">
+<title>Sand Tetris</title>
 <style>
 * {
   margin: 0;
@@ -14,15 +16,17 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #1a1a2e;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #0a0a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   touch-action: none;
+  position: fixed;
 }
 
 #app {
@@ -30,238 +34,342 @@ html, body {
   flex-direction: column;
   height: 100%;
   width: 100%;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-#toolbar {
+#top-bar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 6px 8px;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
-  gap: 6px;
-  flex-shrink: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-#toolbar::-webkit-scrollbar {
-  display: none;
-}
-
-.tool-group {
-  display: flex;
-  gap: 4px;
-  align-items: center;
+  padding: 8px 12px;
+  background: #12122a;
+  border-bottom: 1px solid #1e1e3a;
   flex-shrink: 0;
 }
 
-.tool-group::after {
-  content: '';
-  width: 1px;
-  height: 28px;
-  background: #0f3460;
-  margin: 0 4px;
-  flex-shrink: 0;
+.stat-box {
+  text-align: center;
+  min-width: 60px;
 }
 
-.tool-group:last-child::after {
-  display: none;
-}
-
-.element-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+.stat-label {
+  font-size: 9px;
+  color: #6a6a8a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   font-weight: 600;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  transition: transform 0.1s, border-color 0.15s;
-  flex-shrink: 0;
-  position: relative;
 }
 
-.element-btn.active {
-  border-color: #e94560;
-  transform: scale(1.15);
-  box-shadow: 0 0 10px rgba(233,69,96,0.5);
+.stat-value {
+  font-size: 18px;
+  color: #e8e8f0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.element-btn:active {
-  transform: scale(0.95);
-}
-
-.action-btn {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #0f3460;
-  background: #1a1a2e;
-  color: #a8a8b3;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-
-.action-btn:active {
-  background: #0f3460;
-}
-
-#canvas-container {
+#game-area {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: #0a0a1a;
+  gap: 8px;
+  padding: 4px;
+  min-height: 0;
+}
+
+#side-panel-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+#side-panel-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-box {
+  background: #12122a;
+  border: 1px solid #1e1e3a;
+  border-radius: 8px;
+  padding: 6px;
+  text-align: center;
+}
+
+.preview-label {
+  font-size: 8px;
+  color: #6a6a8a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.preview-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#canvas-container {
+  position: relative;
+  border: 2px solid #2a2a4a;
+  border-radius: 4px;
+  background: #050510;
+  box-shadow: 0 0 20px rgba(100, 100, 255, 0.1), inset 0 0 30px rgba(0,0,0,0.5);
 }
 
 #gameCanvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  display: block;
   touch-action: none;
 }
 
-#size-slider-container {
+#controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #12122a;
+  border-top: 1px solid #1e1e3a;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.ctrl-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ctrl-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #2a2a4a;
+  background: #1a1a35;
+  color: #c8c8e0;
+  font-size: 20px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-#size-slider-container label {
-  color: #a8a8b3;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-#brushSize {
-  width: 60px;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #0f3460;
-  border-radius: 2px;
-  outline: none;
-}
-
-#brushSize::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #e94560;
+  justify-content: center;
   cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-#fps-counter {
-  position: fixed;
-  top: 50px;
-  right: 8px;
-  color: #4a4a5a;
-  font-size: 10px;
-  font-family: monospace;
-  pointer-events: none;
-  z-index: 100;
+.ctrl-btn:active {
+  background: #2a2a5a;
+  transform: scale(0.92);
 }
 
-#pause-indicator {
+.ctrl-btn.wide {
+  width: 64px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.ctrl-btn.accent {
+  background: #2a1a4a;
+  border-color: #4a2a7a;
+  color: #c8a0f0;
+}
+
+.ctrl-btn.accent:active {
+  background: #3a2a6a;
+}
+
+#game-over-overlay {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255,255,255,0.3);
-  font-size: 48px;
-  pointer-events: none;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5, 5, 16, 0.92);
   display: none;
-  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+#game-over-overlay.visible {
+  display: flex;
+}
+
+#game-over-overlay h1 {
+  font-size: 36px;
+  color: #e94560;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+#game-over-overlay .final-score {
+  font-size: 20px;
+  color: #a8a8c0;
+  margin-bottom: 24px;
+}
+
+#restart-btn {
+  padding: 14px 36px;
+  border-radius: 12px;
+  border: 2px solid #e94560;
+  background: transparent;
+  color: #e94560;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#restart-btn:active {
+  background: #e94560;
+  color: #fff;
+}
+
+#pause-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5, 5, 16, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+#pause-overlay.visible {
+  display: flex;
+}
+
+#pause-overlay span {
+  font-size: 48px;
+  color: rgba(200, 200, 240, 0.4);
+  font-weight: 800;
 }
 </style>
-<think>
 </head>
 <body>
 <div id="app">
-  <div id="toolbar">
-    <div class="tool-group">
-      <button class="element-btn active" data-element="1" style="background:#e2b857" title="Sand">🏜</button>
-      <button class="element-btn" data-element="2" style="background:#4a90d9" title="Water">💧</button>
-      <button class="element-btn" data-element="3" style="background:#808080" title="Stone">🪨</button>
-      <button class="element-btn" data-element="4" style="background:#e25822" title="Fire">🔥</button>
-      <button class="element-btn" data-element="5" style="background:#2d8a4e" title="Plant">🌱</button>
-      <button class="element-btn" data-element="6" style="background:#8B5E3C" title="Wood">🪵</button>
-      <button class="element-btn" data-element="7" style="background:#3a3a3a" title="Oil">🛢</button>
-      <button class="element-btn" data-element="8" style="background:#cf4a2a" title="Lava">🌋</button>
-      <button class="element-btn" data-element="9" style="background:#c8c8d0" title="Steam">♨️</button>
-      <button class="element-btn" data-element="10" style="background:#a8d8ea" title="Ice">🧊</button>
-      <button class="element-btn" data-element="11" style="background:#7fff00" title="Acid">🧪</button>
-      <button class="element-btn" data-element="12" style="background:#4a4a4a" title="Gunpowder">💣</button>
-      <button class="element-btn" data-element="13" style="background:#d4a843" title="Seed">🌾</button>
-      <button class="element-btn" data-element="0" style="background:#2a2a3e" title="Eraser">✕</button>
+  <div id="top-bar">
+    <div class="stat-box">
+      <div class="stat-label">Score</div>
+      <div class="stat-value" id="score-display">0</div>
     </div>
-    <div class="tool-group">
-      <div id="size-slider-container">
-        <label>Size</label>
-        <input type="range" id="brushSize" min="1" max="12" value="3">
+    <div class="stat-box">
+      <div class="stat-label">Lines</div>
+      <div class="stat-value" id="lines-display">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Level</div>
+      <div class="stat-value" id="level-display">1</div>
+    </div>
+  </div>
+  <div id="game-area">
+    <div id="side-panel-left">
+      <div class="preview-box">
+        <div class="preview-label">Hold</div>
+        <canvas class="preview-canvas" id="hold-canvas" width="80" height="80"></canvas>
       </div>
     </div>
-    <div class="tool-group">
-      <button class="action-btn" id="pauseBtn">⏸</button>
-      <button class="action-btn" id="clearBtn">Clear</button>
+    <div id="canvas-container">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <div id="side-panel-right">
+      <div class="preview-box">
+        <div class="preview-label">Next</div>
+        <canvas class="preview-canvas" id="next-canvas" width="80" height="80"></canvas>
+      </div>
     </div>
   </div>
-  <div id="canvas-container">
-    <canvas id="gameCanvas"></canvas>
+  <div id="controls">
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btn-left">◀</button>
+      <button class="ctrl-btn" id="btn-rotate">↻</button>
+      <button class="ctrl-btn" id="btn-right">▶</button>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn wide" id="btn-down">▼</button>
+      <button class="ctrl-btn wide accent" id="btn-drop">DROP</button>
+      <button class="ctrl-btn" id="btn-pause">⏸</button>
+    </div>
   </div>
 </div>
-<div id="fps-counter">-- FPS</div>
-<div id="pause-indicator">⏸</div>
+
+<div id="game-over-overlay">
+  <h1>GAME OVER</h1>
+  <div class="final-score" id="final-score">Score: 0</div>
+  <button id="restart-btn">PLAY AGAIN</button>
+</div>
+
+<div id="pause-overlay">
+  <span>PAUSED</span>
+</div>
 
 <script>
 (function() {
   'use strict';
 
-  // === CONSTANTS ===
-  const EMPTY = 0;
-  const SAND = 1;
-  const WATER = 2;
-  const STONE = 3;
-  const FIRE = 4;
-  const PLANT = 5;
-  const WOOD = 6;
-  const OIL = 7;
-  const LAVA = 8;
-  const STEAM = 9;
-  const ICE = 10;
-  const ACID = 11;
-  const GUNPOWDER = 12;
-  const SEED = 13;
-  const SMOKE = 14;
-  const EXPLOSION = 15;
-
-  // Grid dimensions
-  const GRID_W = 200;
-  const GRID_H = 150;
+  // === GRID CONFIGURATION ===
+  const GRID_W = 80;
+  const GRID_H = 160;
   const GRID_SIZE = GRID_W * GRID_H;
+  const CELL_SIZE = 10; // Tetris cells are 10x10 sand particles
+
+  // Tetris playfield in cells
+  const TETRIS_W = 10;
+  const TETRIS_H = 20;
+  const TETRIS_OFFSET_X = Math.floor((GRID_W - TETRIS_W * CELL_SIZE) / 2);
+  const TETRIS_OFFSET_Y = 0;
+
+  // === ELEMENT TYPES ===
+  const EMPTY = 0;
+
+  // Piece colors (Tetris standard)
+  const PIECE_COLORS = {
+    I: { h: 180, s: 70, l: 55 },  // Cyan
+    O: { h: 50, s: 80, l: 55 },   // Yellow
+    T: { h: 280, s: 60, l: 50 },  // Purple
+    S: { h: 130, s: 60, l: 45 },  // Green
+    Z: { h: 0, s: 70, l: 50 },    // Red
+    L: { h: 30, s: 80, l: 55 },   // Orange
+    J: { h: 220, s: 65, l: 50 },  // Blue
+  };
 
   // === STATE ===
-  let grid = new Uint8Array(GRID_SIZE);
-  let updatedGrid = new Uint8Array(GRID_SIZE);
-  let colorGrid = new Uint32Array(GRID_SIZE);
-  let lifetime = new Uint16Array(GRID_SIZE);
-  let tick = 0;
+  let grid = new Uint8Array(GRID_SIZE); // 0 = empty, 1-7 = piece type
+  let colorGrid = new Uint32Array(GRID_SIZE); // Pre-calculated ABGR colors
+  let movedThisFrame = new Uint8Array(GRID_SIZE); // Track particles that moved
+
+  let score = 0;
+  let lines = 0;
+  let level = 1;
   let paused = false;
-  let selectedElement = SAND;
-  let brushRadius = 3;
-  let isDrawing = false;
-  let lastDrawX = -1;
-  let lastDrawY = -1;
+  let gameOver = false;
+  let tick = 0;
+
+  // Current piece state
+  let currentPiece = null;
+  let currentX = 0;
+  let currentY = 0;
+  let currentRotation = 0;
+  let currentType = '';
+  let holdPiece = null;
+  let canHold = true;
+  let nextType = '';
+  let dropTimer = 0;
+  let dropInterval = 60; // frames between drops
+  let lockDelay = 0;
+  let lockDelayMax = 30;
+  let isLocking = false;
+
+  // Line clear animation
+  let clearingLines = [];
+  let clearAnimTimer = 0;
+  const CLEAR_ANIM_DURATION = 20;
 
   // === CANVAS SETUP ===
   const canvas = document.getElementById('gameCanvas');
@@ -272,571 +380,832 @@ html, body {
   let imageData, pixels;
 
   function resizeCanvas() {
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
-    const scaleX = Math.floor(cw / GRID_W);
-    const scaleY = Math.floor(ch / GRID_H);
-    canvasScale = Math.max(1, Math.min(scaleX, scaleY));
+    const area = document.getElementById('game-area');
+    const availW = area.clientWidth - 180; // Leave room for side panels
+    const availH = area.clientHeight - 8;
+
+    const scaleX = Math.floor(availW / GRID_W);
+    const scaleY = Math.floor(availH / GRID_H);
+    canvasScale = Math.max(2, Math.min(scaleX, scaleY));
+
     canvas.width = GRID_W;
     canvas.height = GRID_H;
     canvas.style.width = (GRID_W * canvasScale) + 'px';
     canvas.style.height = (GRID_H * canvasScale) + 'px';
+
     imageData = ctx.createImageData(GRID_W, GRID_H);
     pixels = new Uint32Array(imageData.data.buffer);
   }
 
-  // === COLOR DEFINITIONS ===
-  function getColor(type, x, y) {
-    const noise = ((x * 374761393 + y * 668265263 + tick * 1013904223) >>> 0) % 256;
-    switch(type) {
-      case SAND: return 0xFF000000 | ((200 + (noise % 40)) << 16) | ((170 + (noise % 30)) << 8) | (70 + (noise % 30));
-      case WATER: return 0xFF000000 | ((50 + (noise % 20)) << 16) | ((120 + (noise % 30)) << 8) | (200 + (noise % 40));
-      case STONE: { const v = 100 + (noise % 40); return 0xFF000000 | (v << 16) | (v << 8) | v; }
-      case FIRE: { const life = lifetime[y * GRID_W + x]; const f = Math.min(255, life * 8); return 0xFF000000 | (200 + (noise % 55)) << 16 | (Math.max(0, 150 - f) << 8) | 0; }
-      case PLANT: return 0xFF000000 | ((30 + (noise % 20)) << 16) | ((120 + (noise % 50)) << 8) | (40 + (noise % 30));
-      case WOOD: return 0xFF000000 | ((120 + (noise % 25)) << 16) | ((80 + (noise % 20)) << 8) | (40 + (noise % 15));
-      case OIL: return 0xFF000000 | ((40 + (noise % 15)) << 16) | ((35 + (noise % 15)) << 8) | (30 + (noise % 10));
-      case LAVA: { const f = (noise % 60); return 0xFF000000 | (220 + (f % 35)) << 16 | ((50 + f) << 8) | 0; }
-      case STEAM: { const v = 190 + (noise % 40); return 0xFF000000 | (v << 16) | (v << 8) | (v + 10); }
-      case ICE: return 0xFF000000 | ((160 + (noise % 30)) << 16) | ((210 + (noise % 30)) << 8) | (230 + (noise % 25));
-      case ACID: return 0xFF000000 | ((100 + (noise % 40)) << 16) | ((240 + (noise % 15)) << 8) | (20 + (noise % 20));
-      case GUNPOWDER: { const v = 50 + (noise % 30); return 0xFF000000 | (v << 16) | (v << 8) | v; }
-      case SEED: return 0xFF000000 | ((190 + (noise % 30)) << 16) | ((160 + (noise % 20)) << 8) | (50 + (noise % 30));
-      case SMOKE: { const v = 60 + (noise % 40); return 0xFF000000 | (v << 16) | (v << 8) | v; }
-      case EXPLOSION: return 0xFF000000 | (255 << 16) | (200 + (noise % 55) << 8) | (50 + noise % 100);
-      default: return 0xFF0A0A1A;
-    }
+  // === COLOR GENERATION ===
+  function hslToAbgr(h, s, l) {
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+    let r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+    r = Math.round((r + m) * 255);
+    g = Math.round((g + m) * 255);
+    b = Math.round((b + m) * 255);
+    // ABGR format for ImageData (little-endian)
+    return (255 << 24) | (b << 16) | (g << 8) | r;
+  }
+
+  function generateParticleColor(type) {
+    const base = PIECE_COLORS[type];
+    if (!base) return 0xFF101020;
+    // Random variation for each particle
+    const hVar = (Math.random() - 0.5) * 12;
+    const sVar = (Math.random() - 0.5) * 15;
+    const lVar = (Math.random() - 0.5) * 18;
+    const h = (base.h + hVar + 360) % 360;
+    const s = Math.max(20, Math.min(100, base.s + sVar));
+    const l = Math.max(25, Math.min(70, base.l + lVar));
+    return hslToAbgr(h, s, l);
   }
 
   // === GRID HELPERS ===
   function idx(x, y) { return y * GRID_W + x; }
   function inBounds(x, y) { return x >= 0 && x < GRID_W && y >= 0 && y < GRID_H; }
-  function get(x, y) { return inBounds(x, y) ? grid[idx(x, y)] : STONE; }
-  function set(x, y, type) { if (inBounds(x, y)) { grid[idx(x, y)] = type; lifetime[idx(x, y)] = 0; } }
+  function get(x, y) { return inBounds(x, y) ? grid[idx(x, y)] : 1; } // OOB = solid
   function isEmpty(x, y) { return inBounds(x, y) && grid[idx(x, y)] === EMPTY; }
-  function isLiquid(x, y) { const t = get(x, y); return t === WATER || t === OIL || t === LAVA || t === ACID; }
-  function isFlammable(x, y) { const t = get(x, y); return t === PLANT || t === WOOD || t === OIL || t === SEED || t === GUNPOWDER; }
+
+  function setParticle(x, y, type) {
+    if (!inBounds(x, y)) return;
+    const i = idx(x, y);
+    grid[i] = type;
+    colorGrid[i] = generateParticleColor(type);
+  }
 
   function swap(x1, y1, x2, y2) {
     const i1 = idx(x1, y1), i2 = idx(x2, y2);
-    const tmp = grid[i1]; grid[i1] = grid[i2]; grid[i2] = tmp;
-    const tmpL = lifetime[i1]; lifetime[i1] = lifetime[i2]; lifetime[i2] = tmpL;
+    const tmpG = grid[i1]; grid[i1] = grid[i2]; grid[i2] = tmpG;
+    const tmpC = colorGrid[i1]; colorGrid[i1] = colorGrid[i2]; colorGrid[i2] = tmpC;
   }
 
-  // === SIMULATION ===
-  function updateSand(x, y) {
-    if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-    const belowL = get(x - 1, y + 1);
-    const belowR = get(x + 1, y + 1);
-    const isLiquidL = belowL === WATER || belowL === OIL || belowL === ACID;
-    const isLiquidR = belowR === WATER || belowR === OIL || belowR === ACID;
-    if (isEmpty(x - 1, y + 1) || isLiquidL) { swap(x, y, x - 1, y + 1); return; }
-    if (isEmpty(x + 1, y + 1) || isLiquidR) { swap(x, y, x + 1, y + 1); return; }
+  // === TETRIS PIECES ===
+  const PIECES = {
+    I: [
+      [[0,0],[1,0],[2,0],[3,0]],
+      [[0,0],[0,1],[0,2],[0,3]],
+      [[0,0],[1,0],[2,0],[3,0]],
+      [[0,0],[0,1],[0,2],[0,3]]
+    ],
+    O: [
+      [[0,0],[1,0],[0,1],[1,1]],
+      [[0,0],[1,0],[0,1],[1,1]],
+      [[0,0],[1,0],[0,1],[1,1]],
+      [[0,0],[1,0],[0,1],[1,1]]
+    ],
+    T: [
+      [[0,0],[1,0],[2,0],[1,1]],
+      [[0,0],[0,1],[0,2],[1,1]],
+      [[1,0],[0,1],[1,1],[2,1]],
+      [[1,0],[1,1],[1,2],[0,1]]
+    ],
+    S: [
+      [[1,0],[2,0],[0,1],[1,1]],
+      [[0,0],[0,1],[1,1],[1,2]],
+      [[1,0],[2,0],[0,1],[1,1]],
+      [[0,0],[0,1],[1,1],[1,2]]
+    ],
+    Z: [
+      [[0,0],[1,0],[1,1],[2,1]],
+      [[1,0],[0,1],[1,1],[0,2]],
+      [[0,0],[1,0],[1,1],[2,1]],
+      [[1,0],[0,1],[1,1],[0,2]]
+    ],
+    L: [
+      [[0,0],[1,0],[2,0],[0,1]],
+      [[0,0],[1,0],[1,1],[1,2]],
+      [[2,0],[0,1],[1,1],[2,1]],
+      [[0,0],[0,1],[0,2],[1,2]]
+    ],
+    J: [
+      [[0,0],[1,0],[2,0],[2,1]],
+      [[1,0],[1,1],[0,2],[1,2]],
+      [[0,0],[0,1],[1,1],[2,1]],
+      [[0,0],[1,0],[0,1],[0,2]]
+    ]
+  };
+
+  const PIECE_TYPES = ['I','O','T','S','Z','L','J'];
+
+  function getPieceCells(type, rotation) {
+    return PIECES[type][rotation];
   }
 
-  function updateGunpowder(x, y) {
-    // Check for fire nearby
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const t = get(x + dx, y + dy);
-        if (t === FIRE || t === LAVA || t === EXPLOSION) {
-          explode(x, y, 6);
-          return;
+  function randomType() {
+    return PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)];
+  }
+
+  // 7-bag randomizer
+  let bag = [];
+  function nextFromBag() {
+    if (bag.length === 0) {
+      bag = [...PIECE_TYPES];
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+    }
+    return bag.pop();
+  }
+
+  // === PIECE COLLISION ===
+  function pieceCollides(type, rotation, px, py) {
+    const cells = getPieceCells(type, rotation);
+    for (const [cx, cy] of cells) {
+      const gx = TETRIS_OFFSET_X + (px + cx) * CELL_SIZE;
+      const gy = TETRIS_OFFSET_Y + (py + cy) * CELL_SIZE;
+      // Check if any sand particle in this cell area is occupied
+      for (let dy = 0; dy < CELL_SIZE; dy++) {
+        for (let dx = 0; dx < CELL_SIZE; dx++) {
+          const wx = gx + dx;
+          const wy = gy + dy;
+          if (wx < 0 || wx >= GRID_W || wy >= GRID_H) return true;
+          if (wy >= 0 && grid[idx(wx, wy)] !== EMPTY) return true;
         }
       }
     }
-    updateSand(x, y);
+    return false;
   }
 
-  function updateWater(x, y) {
-    if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-    // Displace oil (water is heavier)
-    if (get(x, y + 1) === OIL) { swap(x, y, x, y + 1); return; }
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    if (isEmpty(x + dir, y + 1)) { swap(x, y, x + dir, y + 1); return; }
-    if (isEmpty(x - dir, y + 1)) { swap(x, y, x - dir, y + 1); return; }
-    // Flow sideways
-    let spread = 3 + Math.floor(Math.random() * 3);
-    for (let i = 1; i <= spread; i++) {
-      if (isEmpty(x + dir * i, y)) { swap(x, y, x + dir * i, y); return; }
-      if (get(x + dir * i, y) !== WATER) break;
-    }
-    for (let i = 1; i <= spread; i++) {
-      if (isEmpty(x - dir * i, y)) { swap(x, y, x - dir * i, y); return; }
-      if (get(x - dir * i, y) !== WATER) break;
-    }
-  }
-
-  function updateOil(x, y) {
-    if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    if (isEmpty(x + dir, y + 1)) { swap(x, y, x + dir, y + 1); return; }
-    if (isEmpty(x - dir, y + 1)) { swap(x, y, x - dir, y + 1); return; }
-    let spread = 2 + Math.floor(Math.random() * 2);
-    for (let i = 1; i <= spread; i++) {
-      if (isEmpty(x + dir * i, y)) { swap(x, y, x + dir * i, y); return; }
-      if (get(x + dir * i, y) !== OIL) break;
-    }
-  }
-
-  function updateLava(x, y) {
-    // Ignite neighbors
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = x + dx, ny = y + dy;
-        const t = get(nx, ny);
-        if (t === WATER) {
-          set(nx, ny, STEAM);
-          set(x, y, STONE);
-          return;
-        }
-        if (t === PLANT || t === WOOD || t === OIL || t === SEED || t === GUNPOWDER) {
-          set(nx, ny, FIRE);
-          lifetime[idx(nx, ny)] = 30 + Math.floor(Math.random() * 20);
-        }
-        if (t === ICE) {
-          set(nx, ny, WATER);
-        }
+  // Check collision at particle level for finer granularity
+  function pieceCollidesFine(type, rotation, px, py) {
+    const cells = getPieceCells(type, rotation);
+    for (const [cx, cy] of cells) {
+      const gx = TETRIS_OFFSET_X + px + cx * CELL_SIZE;
+      const gy = TETRIS_OFFSET_Y + py + cy * CELL_SIZE;
+      // Check bottom row of each cell block
+      for (let dx = 0; dx < CELL_SIZE; dx++) {
+        const wx = gx + dx;
+        const wy = gy + CELL_SIZE; // one below the cell
+        if (wy >= GRID_H) return true;
+        if (wx < 0 || wx >= GRID_W) return true;
+        if (wy >= 0 && grid[idx(wx, wy)] !== EMPTY) return true;
       }
     }
-    // Flow slowly
-    if (Math.random() < 0.3) {
-      if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-      const dir = Math.random() < 0.5 ? -1 : 1;
-      if (isEmpty(x + dir, y + 1)) { swap(x, y, x + dir, y + 1); return; }
-      if (isEmpty(x + dir, y)) { swap(x, y, x + dir, y); return; }
-    }
+    return false;
   }
 
-  function updateFire(x, y) {
-    const i = idx(x, y);
-    lifetime[i]++;
-    if (lifetime[i] > 20 + Math.random() * 30) {
-      if (Math.random() < 0.3) {
-        set(x, y, SMOKE);
-        lifetime[idx(x, y)] = 0;
-      } else {
-        set(x, y, EMPTY);
-      }
-      return;
-    }
-    // Spread fire
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = x + dx, ny = y + dy;
-        const t = get(nx, ny);
-        if ((t === PLANT || t === WOOD || t === SEED) && Math.random() < 0.05) {
-          set(nx, ny, FIRE);
-          lifetime[idx(nx, ny)] = 0;
-        }
-        if (t === OIL && Math.random() < 0.15) {
-          set(nx, ny, FIRE);
-          lifetime[idx(nx, ny)] = 0;
-        }
-        if (t === GUNPOWDER && Math.random() < 0.4) {
-          explode(nx, ny, 5);
-          return;
-        }
-        if (t === ICE && Math.random() < 0.1) {
-          set(nx, ny, WATER);
-        }
-        if (t === WATER) {
-          set(x, y, STEAM);
-          return;
-        }
+  // === PIECE SPAWNING ===
+  function spawnPiece() {
+    currentType = nextType;
+    nextType = nextFromBag();
+    currentRotation = 0;
+    currentX = Math.floor(TETRIS_W / 2) - 2;
+    currentY = -1;
+    canHold = true;
+    isLocking = false;
+    lockDelay = 0;
+    dropTimer = 0;
+
+    if (pieceCollides(currentType, currentRotation, currentX, currentY)) {
+      // Try one row up
+      currentY = -2;
+      if (pieceCollides(currentType, currentRotation, currentX, currentY)) {
+        triggerGameOver();
       }
     }
-    // Rise
-    if (Math.random() < 0.7) {
-      if (isEmpty(x, y - 1)) { swap(x, y, x, y - 1); }
-      else {
-        const dir = Math.random() < 0.5 ? -1 : 1;
-        if (isEmpty(x + dir, y - 1)) swap(x, y, x + dir, y - 1);
-      }
-    }
+    updateNextPreview();
   }
 
-  function updateSteam(x, y) {
-    const i = idx(x, y);
-    lifetime[i]++;
-    if (lifetime[i] > 80 + Math.random() * 60) {
-      if (Math.random() < 0.3) set(x, y, WATER);
-      else set(x, y, EMPTY);
-      return;
+  // === PIECE MOVEMENT ===
+  function movePiece(dx, dy) {
+    if (!pieceCollides(currentType, currentRotation, currentX + dx, currentY + dy)) {
+      currentX += dx;
+      currentY += dy;
+      if (dy === 0 && isLocking) {
+        lockDelay = 0; // Reset lock delay on horizontal move
+      }
+      return true;
     }
-    if (Math.random() < 0.8) {
-      const dir = Math.random() < 0.5 ? -1 : 1;
-      if (isEmpty(x, y - 1)) { swap(x, y, x, y - 1); return; }
-      if (isEmpty(x + dir, y - 1)) { swap(x, y, x + dir, y - 1); return; }
-      if (isEmpty(x + dir, y)) { swap(x, y, x + dir, y); return; }
-    }
+    return false;
   }
 
-  function updateSmoke(x, y) {
-    const i = idx(x, y);
-    lifetime[i]++;
-    if (lifetime[i] > 60 + Math.random() * 80) {
-      set(x, y, EMPTY);
-      return;
+  function rotatePiece(dir) {
+    const newRot = (currentRotation + dir + 4) % 4;
+    // Try basic rotation
+    if (!pieceCollides(currentType, newRot, currentX, currentY)) {
+      currentRotation = newRot;
+      if (isLocking) lockDelay = 0;
+      return true;
     }
-    if (Math.random() < 0.6) {
-      const dir = Math.random() < 0.5 ? -1 : 1;
-      if (isEmpty(x, y - 1)) { swap(x, y, x, y - 1); return; }
-      if (isEmpty(x + dir, y - 1)) { swap(x, y, x + dir, y - 1); return; }
-    }
-  }
-
-  function updatePlant(x, y) {
-    // Grow when near water
-    let hasWater = false;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        if (get(x + dx, y + dy) === WATER) hasWater = true;
+    // Wall kicks
+    const kicks = [[1,0],[-1,0],[0,-1],[2,0],[-2,0],[0,-2]];
+    for (const [kx, ky] of kicks) {
+      if (!pieceCollides(currentType, newRot, currentX + kx, currentY + ky)) {
+        currentX += kx;
+        currentY += ky;
+        currentRotation = newRot;
+        if (isLocking) lockDelay = 0;
+        return true;
       }
     }
-    if (hasWater && Math.random() < 0.03) {
-      const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
-      const d = dirs[Math.floor(Math.random() * 4)];
-      const nx = x + d[0], ny = y + d[1];
-      if (isEmpty(nx, ny)) {
-        set(nx, ny, PLANT);
-      }
-    }
+    return false;
   }
 
-  function updateSeed(x, y) {
-    // Fall like sand
-    if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-    // If landed on something, try to grow into plant
-    if (get(x, y + 1) !== EMPTY && get(x, y + 1) !== WATER) {
-      if (Math.random() < 0.005) {
-        set(x, y, PLANT);
-      }
-      return;
+  function hardDrop() {
+    let dropped = 0;
+    while (!pieceCollides(currentType, currentRotation, currentX, currentY + 1)) {
+      currentY++;
+      dropped++;
     }
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    if (isEmpty(x + dir, y + 1)) { swap(x, y, x + dir, y + 1); }
+    score += dropped * 2;
+    lockPiece();
   }
 
-  function updateIce(x, y) {
-    // Freeze adjacent water
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        if (get(x + dx, y + dy) === WATER && Math.random() < 0.01) {
-          set(x + dx, y + dy, ICE);
-        }
-      }
-    }
-  }
+  function lockPiece() {
+    // Convert piece cells to sand particles
+    const cells = getPieceCells(currentType, currentRotation);
+    const typeNum = PIECE_TYPES.indexOf(currentType) + 1;
 
-  function updateAcid(x, y) {
-    // Dissolve things below and to sides
-    for (let dy = 0; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = x + dx, ny = y + dy;
-        const t = get(nx, ny);
-        if (t !== EMPTY && t !== ACID && t !== WATER && t !== LAVA && t !== ICE && t !== STEAM) {
-          if (Math.random() < 0.08) {
-            set(nx, ny, EMPTY);
-            if (Math.random() < 0.5) {
-              set(x, y, Math.random() < 0.3 ? SMOKE : EMPTY);
-              return;
+    for (const [cx, cy] of cells) {
+      const gx = TETRIS_OFFSET_X + (currentX + cx) * CELL_SIZE;
+      const gy = TETRIS_OFFSET_Y + (currentY + cy) * CELL_SIZE;
+      // Fill the cell with sand particles
+      for (let dy = 0; dy < CELL_SIZE; dy++) {
+        for (let dx = 0; dx < CELL_SIZE; dx++) {
+          const wx = gx + dx;
+          const wy = gy + dy;
+          if (inBounds(wx, wy) && grid[idx(wx, wy)] === EMPTY) {
+            // Add slight randomness - not every pixel filled (sand-like)
+            if (Math.random() < 0.85) {
+              setParticle(wx, wy, typeNum);
             }
           }
         }
       }
     }
-    // Flow like water
-    if (isEmpty(x, y + 1)) { swap(x, y, x, y + 1); return; }
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    if (isEmpty(x + dir, y + 1)) { swap(x, y, x + dir, y + 1); return; }
-    if (isEmpty(x - dir, y + 1)) { swap(x, y, x - dir, y + 1); return; }
-    if (isEmpty(x + dir, y)) { swap(x, y, x + dir, y); return; }
+
+    score += 10;
+    currentPiece = null;
+    checkLineClears();
+
+    // Spawn next piece after a short delay
+    setTimeout(() => {
+      if (!gameOver) spawnPiece();
+    }, 100);
   }
 
-  function explode(cx, cy, radius) {
-    for (let dy = -radius; dy <= radius; dy++) {
-      for (let dx = -radius; dx <= radius; dx++) {
-        if (dx * dx + dy * dy > radius * radius) continue;
-        const nx = cx + dx, ny = cy + dy;
-        if (!inBounds(nx, ny)) continue;
-        const t = get(nx, ny);
-        if (t === STONE) continue;
-        if (t === GUNPOWDER && (dx !== 0 || dy !== 0)) {
-          set(nx, ny, EXPLOSION);
-          lifetime[idx(nx, ny)] = 0;
-        } else if (t !== EMPTY) {
-          if (Math.random() < 0.7) {
-            set(nx, ny, FIRE);
-            lifetime[idx(nx, ny)] = 0;
-          } else {
-            set(nx, ny, EMPTY);
+  function holdCurrentPiece() {
+    if (!canHold) return;
+    canHold = false;
+    if (holdPiece) {
+      const temp = holdPiece;
+      holdPiece = currentType;
+      currentType = temp;
+      currentRotation = 0;
+      currentX = Math.floor(TETRIS_W / 2) - 2;
+      currentY = -1;
+      isLocking = false;
+      lockDelay = 0;
+    } else {
+      holdPiece = currentType;
+      spawnPiece();
+    }
+    updateHoldPreview();
+  }
+
+  // === LINE CLEARING ===
+  function checkLineClears() {
+    clearingLines = [];
+    // Check each row in the tetris playfield
+    for (let row = 0; row < TETRIS_H; row++) {
+      const gy = TETRIS_OFFSET_Y + row * CELL_SIZE + Math.floor(CELL_SIZE / 2); // middle of cell row
+      if (gy >= GRID_H) continue;
+
+      let full = true;
+      for (let cell = 0; cell < TETRIS_W; cell++) {
+        const gx = TETRIS_OFFSET_X + cell * CELL_SIZE + Math.floor(CELL_SIZE / 2);
+        if (gx >= GRID_W || grid[idx(gx, gy)] === EMPTY) {
+          full = false;
+          break;
+        }
+      }
+      if (full) {
+        clearingLines.push(row);
+      }
+    }
+
+    if (clearingLines.length > 0) {
+      clearAnimTimer = CLEAR_ANIM_DURATION;
+      // Score
+      const lineScores = [0, 100, 300, 500, 800];
+      score += (lineScores[clearingLines.length] || 800) * level;
+      lines += clearingLines.length;
+      level = Math.floor(lines / 10) + 1;
+      dropInterval = Math.max(5, 60 - (level - 1) * 5);
+      updateUI();
+    }
+  }
+
+  function processLineClear() {
+    if (clearingLines.length === 0) return;
+
+    // Remove particles in clearing lines
+    for (const row of clearingLines) {
+      const gyStart = TETRIS_OFFSET_Y + row * CELL_SIZE;
+      for (let dy = 0; dy < CELL_SIZE; dy++) {
+        const gy = gyStart + dy;
+        if (gy >= GRID_H) continue;
+        for (let gx = TETRIS_OFFSET_X; gx < TETRIS_OFFSET_X + TETRIS_W * CELL_SIZE; gx++) {
+          if (gx < GRID_W) {
+            grid[idx(gx, gy)] = EMPTY;
+            colorGrid[idx(gx, gy)] = 0;
           }
         }
       }
     }
-    set(cx, cy, EXPLOSION);
-    lifetime[idx(cx, cy)] = 0;
+
+    // Apply gravity to everything above cleared lines (sand falls)
+    // This happens naturally in the simulation, but we can give it a nudge
+    clearingLines = [];
   }
 
-  function updateExplosion(x, y) {
-    const i = idx(x, y);
-    lifetime[i]++;
-    if (lifetime[i] > 3) {
-      if (Math.random() < 0.5) set(x, y, FIRE);
-      else set(x, y, EMPTY);
-    }
-  }
-
-  function simulate() {
+  // === SAND PHYSICS ===
+  function simulateSand() {
     tick++;
-    // Process bottom to top for falling, but alternate scan direction
     const leftToRight = tick % 2 === 0;
 
-    for (let y = GRID_H - 1; y >= 0; y--) {
+    // Clear moved flags
+    movedThisFrame.fill(0);
+
+    // Process from bottom to top
+    for (let y = GRID_H - 2; y >= 0; y--) {
       if (leftToRight) {
         for (let x = 0; x < GRID_W; x++) {
-          updateCell(x, y);
+          updateSandParticle(x, y);
         }
       } else {
         for (let x = GRID_W - 1; x >= 0; x--) {
-          updateCell(x, y);
+          updateSandParticle(x, y);
         }
       }
     }
   }
 
-  function updateCell(x, y) {
+  function updateSandParticle(x, y) {
     const i = idx(x, y);
-    const type = grid[i];
-    if (type === EMPTY) return;
+    if (grid[i] === EMPTY || movedThisFrame[i]) return;
 
-    switch(type) {
-      case SAND: updateSand(x, y); break;
-      case WATER: updateWater(x, y); break;
-      case FIRE: updateFire(x, y); break;
-      case PLANT: updatePlant(x, y); break;
-      case OIL: updateOil(x, y); break;
-      case LAVA: updateLava(x, y); break;
-      case STEAM: updateSteam(x, y); break;
-      case ICE: updateIce(x, y); break;
-      case ACID: updateAcid(x, y); break;
-      case GUNPOWDER: updateGunpowder(x, y); break;
-      case SEED: updateSeed(x, y); break;
-      case SMOKE: updateSmoke(x, y); break;
-      case EXPLOSION: updateExplosion(x, y); break;
-      // STONE and WOOD don't move
+    const below = y + 1;
+    if (below >= GRID_H) return;
+
+    const belowIdx = idx(x, below);
+
+    // Fall straight down
+    if (grid[belowIdx] === EMPTY) {
+      swap(x, y, x, below);
+      movedThisFrame[belowIdx] = 1;
+      return;
+    }
+
+    // Diagonal - randomize direction to prevent bias
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const dx1 = x + dir;
+    const dx2 = x - dir;
+
+    if (inBounds(dx1, below) && grid[idx(dx1, below)] === EMPTY) {
+      swap(x, y, dx1, below);
+      movedThisFrame[idx(dx1, below)] = 1;
+      return;
+    }
+    if (inBounds(dx2, below) && grid[idx(dx2, below)] === EMPTY) {
+      swap(x, y, dx2, below);
+      movedThisFrame[idx(dx2, below)] = 1;
+      return;
+    }
+
+    // Try to slide sideways if supported (for settled sand)
+    // Small chance to settle and spread
+    if (Math.random() < 0.02) {
+      if (inBounds(dx1, y) && grid[idx(dx1, y)] === EMPTY && below < GRID_H && grid[idx(dx1, below)] !== EMPTY) {
+        // Don't actually move, just a visual settling check
+      }
     }
   }
 
   // === RENDERING ===
+  const BG_COLOR = 0xFF101018;
+  const GRID_LINE_COLOR = 0xFF181828;
+
   function render() {
-    for (let y = 0; y < GRID_H; y++) {
-      for (let x = 0; x < GRID_W; x++) {
-        const i = idx(x, y);
-        const type = grid[i];
-        if (type === EMPTY) {
-          pixels[i] = 0xFF1A1A2E;
-        } else {
-          pixels[i] = getColor(type, x, y);
+    // Fill background
+    for (let i = 0; i < GRID_SIZE; i++) {
+      pixels[i] = BG_COLOR;
+    }
+
+    // Draw subtle grid lines for tetris cells
+    for (let row = 0; row <= TETRIS_H; row++) {
+      const gy = TETRIS_OFFSET_Y + row * CELL_SIZE;
+      if (gy < GRID_H) {
+        for (let x = TETRIS_OFFSET_X; x < TETRIS_OFFSET_X + TETRIS_W * CELL_SIZE; x++) {
+          if (x < GRID_W) pixels[idx(x, gy)] = GRID_LINE_COLOR;
         }
       }
     }
+    for (let col = 0; col <= TETRIS_W; col++) {
+      const gx = TETRIS_OFFSET_X + col * CELL_SIZE;
+      if (gx < GRID_W) {
+        for (let y = TETRIS_OFFSET_Y; y < TETRIS_OFFSET_Y + TETRIS_H * CELL_SIZE && y < GRID_H; y++) {
+          pixels[idx(gx, y)] = GRID_LINE_COLOR;
+        }
+      }
+    }
+
+    // Draw settled particles
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        const i = idx(x, y);
+        if (grid[i] !== EMPTY) {
+          pixels[i] = colorGrid[i];
+        }
+      }
+    }
+
+    // Draw line clear animation
+    if (clearAnimTimer > 0) {
+      const flash = clearAnimTimer % 4 < 2;
+      if (flash) {
+        for (const row of clearingLines) {
+          const gyStart = TETRIS_OFFSET_Y + row * CELL_SIZE;
+          for (let dy = 0; dy < CELL_SIZE; dy++) {
+            const gy = gyStart + dy;
+            if (gy >= GRID_H) continue;
+            for (let gx = TETRIS_OFFSET_X; gx < TETRIS_OFFSET_X + TETRIS_W * CELL_SIZE && gx < GRID_W; gx++) {
+              pixels[idx(gx, gy)] = 0xFFF0F0FF;
+            }
+          }
+        }
+      }
+    }
+
+    // Draw current piece (ghost + active)
+    if (currentType && !gameOver) {
+      // Ghost piece
+      let ghostY = currentY;
+      while (!pieceCollides(currentType, currentRotation, currentX, ghostY + 1)) {
+        ghostY++;
+      }
+      if (ghostY !== currentY) {
+        drawPieceCells(currentType, currentRotation, currentX, ghostY, 0.2);
+      }
+
+      // Active piece
+      drawPieceCells(currentType, currentRotation, currentX, currentY, 1.0);
+    }
+
     ctx.putImageData(imageData, 0, 0);
   }
 
-  // === INPUT HANDLING ===
-  function getGridPos(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((clientX - rect.left) / canvasScale);
-    const y = Math.floor((clientY - rect.top) / canvasScale);
-    return { x, y };
-  }
+  function drawPieceCells(type, rotation, px, py, alpha) {
+    const cells = getPieceCells(type, rotation);
+    const baseColor = PIECE_COLORS[type];
+    if (!baseColor) return;
 
-  function paintAt(gx, gy) {
-    const r = brushRadius;
-    for (let dy = -r; dy <= r; dy++) {
-      for (let dx = -r; dx <= r; dx++) {
-        if (dx * dx + dy * dy > r * r) continue;
-        const nx = gx + dx, ny = gy + dy;
-        if (!inBounds(nx, ny)) continue;
-        if (selectedElement === EMPTY) {
-          set(nx, ny, EMPTY);
-        } else {
-          // Don't overwrite stone/water when painting (unless eraser)
-          if (Math.random() < 0.6 || grid[idx(nx, ny)] === EMPTY) {
-            set(nx, ny, selectedElement);
+    const baseAbgr = hslToAbgr(baseColor.h, baseColor.s, baseColor.l);
+    // Extract RGB and apply alpha
+    const r = baseAbgr & 0xFF;
+    const g = (baseAbgr >> 8) & 0xFF;
+    const b = (baseAbgr >> 16) & 0xFF;
+    const ar = Math.round(r * alpha + 16 * (1 - alpha));
+    const ag = Math.round(g * alpha + 16 * (1 - alpha));
+    const ab = Math.round(b * alpha + 24 * (1 - alpha));
+    const blended = 0xFF000000 | (ab << 16) | (ag << 8) | ar;
+
+    for (const [cx, cy] of cells) {
+      const gx = TETRIS_OFFSET_X + (px + cx) * CELL_SIZE;
+      const gy = TETRIS_OFFSET_Y + (py + cy) * CELL_SIZE;
+      for (let dy = 0; dy < CELL_SIZE; dy++) {
+        for (let dx = 0; dx < CELL_SIZE; dx++) {
+          const wx = gx + dx;
+          const wy = gy + dy;
+          if (inBounds(wx, wy)) {
+            // Sand-like texture: skip some pixels
+            if (alpha >= 1.0) {
+              if (Math.random() < 0.8) {
+                pixels[idx(wx, wy)] = blended;
+              }
+            } else {
+              pixels[idx(wx, wy)] = blended;
+            }
           }
         }
       }
     }
   }
 
-  function paintLine(x0, y0, x1, y1) {
-    const dx = Math.abs(x1 - x0);
-    const dy = Math.abs(y1 - y0);
-    const sx = x0 < x1 ? 1 : -1;
-    const sy = y0 < y1 ? 1 : -1;
-    let err = dx - dy;
-    let cx = x0, cy = y0;
-    while (true) {
-      paintAt(cx, cy);
-      if (cx === x1 && cy === y1) break;
-      const e2 = 2 * err;
-      if (e2 > -dy) { err -= dy; cx += sx; }
-      if (e2 < dx) { err += dx; cy += sy; }
+  // === PREVIEW CANVASES ===
+  function drawPreview(canvasEl, type) {
+    const pctx = canvasEl.getContext('2d');
+    const w = canvasEl.width;
+    const h = canvasEl.height;
+    pctx.fillStyle = '#0a0a1a';
+    pctx.fillRect(0, 0, w, h);
+
+    if (!type) return;
+
+    const cells = getPieceCells(type, 0);
+    const baseColor = PIECE_COLORS[type];
+    const color = hslToAbgr(baseColor.h, baseColor.s, baseColor.l);
+    const r = color & 0xFF;
+    const g = (color >> 8) & 0xFF;
+    const b = (color >> 16) & 0xFF;
+
+    // Find bounds
+    let minX = 4, maxX = 0, minY = 4, maxY = 0;
+    for (const [cx, cy] of cells) {
+      minX = Math.min(minX, cx);
+      maxX = Math.max(maxX, cx);
+      minY = Math.min(minY, cy);
+      maxY = Math.max(maxY, cy);
+    }
+    const pw = maxX - minX + 1;
+    const ph = maxY - minY + 1;
+    const cellPx = Math.min(Math.floor(w / (pw + 1)), Math.floor(h / (ph + 1)), 16);
+    const offX = Math.floor((w - pw * cellPx) / 2) - minX * cellPx;
+    const offY = Math.floor((h - ph * cellPx) / 2) - minY * cellPx;
+
+    for (const [cx, cy] of cells) {
+      const px = offX + cx * cellPx;
+      const py = offY + cy * cellPx;
+      // Draw with slight variation
+      for (let dy = 0; dy < cellPx; dy++) {
+        for (let dx = 0; dx < cellPx; dx++) {
+          if (Math.random() < 0.85) {
+            const vr = Math.max(0, Math.min(255, r + Math.floor((Math.random() - 0.5) * 30)));
+            const vg = Math.max(0, Math.min(255, g + Math.floor((Math.random() - 0.5) * 30)));
+            const vb = Math.max(0, Math.min(255, b + Math.floor((Math.random() - 0.5) * 30)));
+            pctx.fillStyle = `rgb(${vr},${vg},${vb})`;
+            pctx.fillRect(px + dx, py + dy, 1, 1);
+          }
+        }
+      }
     }
   }
 
-  // Touch events
-  canvas.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    isDrawing = true;
-    const touch = e.touches[0];
-    const pos = getGridPos(touch.clientX, touch.clientY);
-    lastDrawX = pos.x;
-    lastDrawY = pos.y;
-    paintAt(pos.x, pos.y);
-  }, { passive: false });
+  function updateNextPreview() {
+    drawPreview(document.getElementById('next-canvas'), nextType);
+  }
 
-  canvas.addEventListener('touchmove', function(e) {
-    e.preventDefault();
-    if (!isDrawing) return;
-    const touch = e.touches[0];
-    const pos = getGridPos(touch.clientX, touch.clientY);
-    if (lastDrawX >= 0) {
-      paintLine(lastDrawX, lastDrawY, pos.x, pos.y);
-    } else {
-      paintAt(pos.x, pos.y);
-    }
-    lastDrawX = pos.x;
-    lastDrawY = pos.y;
-  }, { passive: false });
+  function updateHoldPreview() {
+    drawPreview(document.getElementById('hold-canvas'), holdPiece);
+  }
 
-  canvas.addEventListener('touchend', function(e) {
-    e.preventDefault();
-    isDrawing = false;
-    lastDrawX = -1;
-    lastDrawY = -1;
-  }, { passive: false });
+  // === UI UPDATES ===
+  function updateUI() {
+    document.getElementById('score-display').textContent = score;
+    document.getElementById('lines-display').textContent = lines;
+    document.getElementById('level-display').textContent = level;
+  }
 
-  canvas.addEventListener('touchcancel', function(e) {
-    isDrawing = false;
-    lastDrawX = -1;
-    lastDrawY = -1;
-  });
+  function triggerGameOver() {
+    gameOver = true;
+    document.getElementById('final-score').textContent = `Score: ${score}`;
+    document.getElementById('game-over-overlay').classList.add('visible');
+  }
 
-  // Mouse events (for desktop testing)
-  canvas.addEventListener('mousedown', function(e) {
-    isDrawing = true;
-    const pos = getGridPos(e.clientX, e.clientY);
-    lastDrawX = pos.x;
-    lastDrawY = pos.y;
-    paintAt(pos.x, pos.y);
-  });
-
-  canvas.addEventListener('mousemove', function(e) {
-    if (!isDrawing) return;
-    const pos = getGridPos(e.clientX, e.clientY);
-    if (lastDrawX >= 0) {
-      paintLine(lastDrawX, lastDrawY, pos.x, pos.y);
-    } else {
-      paintAt(pos.x, pos.y);
-    }
-    lastDrawX = pos.x;
-    lastDrawY = pos.y;
-  });
-
-  canvas.addEventListener('mouseup', function() {
-    isDrawing = false;
-    lastDrawX = -1;
-    lastDrawY = -1;
-  });
-
-  canvas.addEventListener('mouseleave', function() {
-    isDrawing = false;
-    lastDrawX = -1;
-    lastDrawY = -1;
-  });
-
-  // === UI ===
-  const elementBtns = document.querySelectorAll('.element-btn');
-  elementBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      elementBtns.forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      selectedElement = parseInt(this.dataset.element);
-    });
-    btn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      elementBtns.forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      selectedElement = parseInt(this.dataset.element);
-    });
-  });
-
-  const brushSlider = document.getElementById('brushSize');
-  brushSlider.addEventListener('input', function() {
-    brushRadius = parseInt(this.value);
-  });
-
-  const pauseBtn = document.getElementById('pauseBtn');
-  const pauseIndicator = document.getElementById('pause-indicator');
-  pauseBtn.addEventListener('click', function() {
-    paused = !paused;
-    this.textContent = paused ? '▶' : '⏸';
-    pauseIndicator.style.display = paused ? 'block' : 'none';
-  });
-
-  document.getElementById('clearBtn').addEventListener('click', function() {
+  function restartGame() {
     grid.fill(0);
-    lifetime.fill(0);
-  });
-
-  // Prevent scrolling/bouncing on iPad
-  document.addEventListener('touchmove', function(e) {
-    if (e.target === canvas || e.target.closest('#toolbar')) return;
-    e.preventDefault();
-  }, { passive: false });
+    colorGrid.fill(0);
+    score = 0;
+    lines = 0;
+    level = 1;
+    dropInterval = 60;
+    gameOver = false;
+    paused = false;
+    clearingLines = [];
+    clearAnimTimer = 0;
+    holdPiece = null;
+    bag = [];
+    nextType = nextFromBag();
+    spawnPiece();
+    updateUI();
+    updateHoldPreview();
+    document.getElementById('game-over-overlay').classList.remove('visible');
+    document.getElementById('pause-overlay').classList.remove('visible');
+  }
 
   // === GAME LOOP ===
-  let frameCount = 0;
-  let lastFpsTime = performance.now();
-  const fpsCounter = document.getElementById('fps-counter');
-
   function gameLoop() {
-    if (!paused) {
-      simulate();
+    if (!paused && !gameOver) {
+      // Sand physics
+      simulateSand();
+
+      // Line clear animation
+      if (clearAnimTimer > 0) {
+        clearAnimTimer--;
+        if (clearAnimTimer === 0) {
+          processLineClear();
+        }
+      }
+
+      // Piece dropping
+      if (currentType && clearAnimTimer === 0) {
+        dropTimer++;
+        if (dropTimer >= dropInterval) {
+          dropTimer = 0;
+          if (!movePiece(0, 1)) {
+            // Can't move down - start or continue lock delay
+            isLocking = true;
+            lockDelay++;
+            if (lockDelay >= lockDelayMax) {
+              lockPiece();
+            }
+          } else {
+            isLocking = false;
+            lockDelay = 0;
+          }
+        } else if (isLocking) {
+          // Check if piece can still not move down
+          if (!pieceCollides(currentType, currentRotation, currentX, currentY + 1)) {
+            isLocking = false;
+            lockDelay = 0;
+          }
+        }
+      }
     }
+
     render();
-
-    frameCount++;
-    const now = performance.now();
-    if (now - lastFpsTime >= 1000) {
-      fpsCounter.textContent = frameCount + ' FPS';
-      frameCount = 0;
-      lastFpsTime = now;
-    }
-
     requestAnimationFrame(gameLoop);
   }
 
-  // === INIT ===
+  // === INPUT HANDLING ===
+  // Button controls
+  function setupButton(id, action, repeat = false) {
+    const btn = document.getElementById(id);
+    let interval = null;
+
+    const doAction = (e) => {
+      e.preventDefault();
+      if (gameOver) return;
+      action();
+    };
+
+    btn.addEventListener('touchstart', (e) => {
+      doAction(e);
+      if (repeat) {
+        interval = setInterval(() => action(), 80);
+      }
+    }, { passive: false });
+
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (interval) { clearInterval(interval); interval = null; }
+    }, { passive: false });
+
+    btn.addEventListener('touchcancel', () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    });
+
+    btn.addEventListener('mousedown', (e) => {
+      doAction(e);
+      if (repeat) {
+        interval = setInterval(() => action(), 80);
+      }
+    });
+
+    btn.addEventListener('mouseup', () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    });
+  }
+
+  setupButton('btn-left', () => { if (currentType && !paused) movePiece(-1, 0); }, true);
+  setupButton('btn-right', () => { if (currentType && !paused) movePiece(1, 0); }, true);
+  setupButton('btn-down', () => {
+    if (currentType && !paused) {
+      if (movePiece(0, 1)) score += 1;
+    }
+  }, true);
+  setupButton('btn-rotate', () => { if (currentType && !paused) rotatePiece(1); });
+  setupButton('btn-drop', () => { if (currentType && !paused) hardDrop(); });
+  setupButton('btn-pause', () => {
+    paused = !paused;
+    document.getElementById('pause-overlay').classList.toggle('visible', paused);
+    document.getElementById('btn-pause').textContent = paused ? '▶' : '⏸';
+  });
+
+  // Touch gestures on canvas
+  let touchStartX = 0, touchStartY = 0;
+  let touchStartTime = 0;
+  let touchMoved = false;
+  let lastTouchX = 0;
+  let swipeThreshold = 20;
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    lastTouchX = touch.clientX;
+    touchStartTime = Date.now();
+    touchMoved = false;
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!currentType || paused || gameOver) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - lastTouchX;
+    const cellWidth = canvasScale * CELL_SIZE;
+
+    // Move piece based on horizontal drag
+    if (Math.abs(dx) >= cellWidth) {
+      const steps = Math.floor(Math.abs(dx) / cellWidth);
+      const dir = dx > 0 ? 1 : -1;
+      for (let i = 0; i < steps; i++) {
+        movePiece(dir, 0);
+      }
+      lastTouchX += steps * cellWidth * dir;
+      touchMoved = true;
+    }
+
+    // Soft drop on downward drag
+    const dy = touch.clientY - touchStartY;
+    if (dy > cellWidth * 2) {
+      if (movePiece(0, 1)) score += 1;
+      touchStartY = touch.clientY;
+      touchMoved = true;
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (!currentType || paused || gameOver) return;
+
+    const elapsed = Date.now() - touchStartTime;
+    const touch = e.changedTouches[0];
+    const dy = touch.clientY - touchStartY;
+
+    // Quick swipe down = hard drop
+    if (!touchMoved && dy > 40 && elapsed < 300) {
+      hardDrop();
+    }
+    // Quick tap = rotate
+    else if (!touchMoved && elapsed < 200) {
+      rotatePiece(1);
+    }
+  }, { passive: false });
+
+  // Keyboard controls (for desktop testing)
+  document.addEventListener('keydown', (e) => {
+    if (gameOver) return;
+    if (e.key === 'p' || e.key === 'P') {
+      paused = !paused;
+      document.getElementById('pause-overlay').classList.toggle('visible', paused);
+      return;
+    }
+    if (paused) return;
+    switch(e.key) {
+      case 'ArrowLeft': movePiece(-1, 0); break;
+      case 'ArrowRight': movePiece(1, 0); break;
+      case 'ArrowDown': if (movePiece(0, 1)) score += 1; break;
+      case 'ArrowUp': rotatePiece(1); break;
+      case 'z': case 'Z': rotatePiece(-1); break;
+      case ' ': hardDrop(); e.preventDefault(); break;
+      case 'c': case 'C': holdCurrentPiece(); break;
+    }
+    updateUI();
+  });
+
+  // Restart button
+  document.getElementById('restart-btn').addEventListener('click', restartGame);
+  document.getElementById('restart-btn').addEventListener('touchend', (e) => {
+    e.preventDefault();
+    restartGame();
+  });
+
+  // Prevent default touch behaviors
+  document.addEventListener('touchmove', (e) => {
+    if (e.target === canvas) return;
+    e.preventDefault();
+  }, { passive: false });
+
+  // === INITIALIZATION ===
   function init() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    // Add some initial ground
-    for (let x = 0; x < GRID_W; x++) {
-      for (let y = GRID_H - 5; y < GRID_H; y++) {
-        set(x, y, STONE);
-      }
-    }
+    window.addEventListener('orientationchange', () => {
+      setTimeout(resizeCanvas, 100);
+    });
+
+    nextType = nextFromBag();
+    spawnPiece();
+    updateUI();
+    updateNextPreview();
+    updateHoldPreview();
     gameLoop();
   }
 
